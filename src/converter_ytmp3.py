@@ -9,8 +9,16 @@ import time
 from pathlib import Path
 from urllib.parse import quote
 
-from playwright.sync_api import TimeoutError as PlaywrightTimeout
-from playwright.sync_api import sync_playwright
+try:
+    from playwright.sync_api import TimeoutError as PlaywrightTimeout
+    from playwright.sync_api import sync_playwright
+    HAS_PLAYWRIGHT = True
+except Exception:
+    HAS_PLAYWRIGHT = False
+    class PlaywrightTimeout(Exception):  # type: ignore[no-redef]
+        pass
+    def sync_playwright():  # type: ignore[no-redef]
+        raise RuntimeError("Playwright is not installed.")
 
 from .filenames import safe_filename, unique_path
 from .paths import BROWSERS_DIR, apply_local_env
@@ -63,6 +71,10 @@ def download_mp3(url: str, music_dir: Path, preferred_name: str | None = None) -
     Prefers highest quality (320 kbps when offered).
     Skips instantly if the circuit breaker is open (too many recent failures).
     """
+    if not HAS_PLAYWRIGHT:
+        _record_failure()
+        raise Ytmp3Error("Playwright library is not available.")
+
     # Circuit breaker: skip if ytmp3vid has failed too many times in a row
     if is_circuit_open():
         raise Ytmp3Error("Circuit breaker open — skipping ytmp3vid (too many consecutive failures)")

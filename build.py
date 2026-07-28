@@ -43,7 +43,7 @@ def main() -> int:
         "-m",
         "PyInstaller",
         "--noconfirm",
-        "--onefile",
+        "--onedir",
         "--windowed",
         "--name", app_name,
         "--add-data", add_data_ctk,
@@ -51,6 +51,7 @@ def main() -> int:
         "--hidden-import", "yt_dlp",
         "--hidden-import", "rich",
         "--hidden-import", "PIL",
+        "--exclude-module", "playwright",
         "--clean",
         str(ROOT / "agent.py"),
     ]
@@ -59,19 +60,13 @@ def main() -> int:
     result = subprocess.run(cmd, cwd=str(ROOT))
 
     if result.returncode == 0:
-        dist_dir = ROOT / "dist"
-        if sys.platform == "win32":
-            exe_path = dist_dir / f"{app_name}.exe"
-            target = ROOT / f"{app_name}.exe"
-            if exe_path.exists():
-                shutil.copy2(exe_path, target)
-                print(f"[OK] Successfully created Windows executable: {target}")
-        else:
-            bin_path = dist_dir / app_name
-            target = ROOT / app_name
-            if bin_path.exists():
-                shutil.copy2(bin_path, target)
-                print(f"[OK] Successfully created macOS binary: {target}")
+        dist_dir = ROOT / "dist" / app_name
+        if dist_dir.exists():
+            print(f"[OK] Successfully created standalone folder bundle: {dist_dir}")
+            # Zip the directory for easy distribution
+            zip_target = ROOT / f"{app_name}-{sys.platform}"
+            shutil.make_archive(str(zip_target), "zip", dist_dir)
+            print(f"[OK] Created distribution package: {zip_target}.zip")
     else:
         print("[FAIL] Build failed!")
 
