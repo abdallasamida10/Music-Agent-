@@ -44,14 +44,15 @@ Automate: song name → YouTube search → MP3 (highest quality) → `Music/` fo
 |------|------|
 | Project root | folder containing `agent.py` |
 | Output | `Music/` |
-| Entry | `start.bat` / `start.ps1` / `python agent.py` |
-| Setup | `setup.ps1` |
+| Entry | `MusicAgent.exe` (Windows) / `./MusicAgent` (macOS) / `python agent.py` |
+| Build | `python build.py` |
 
-## Setup (once per machine)
+## Setup & Build
 
 ```powershell
 cd "<project_folder>"
-.\setup.ps1
+pip install -r requirements.txt
+python build.py
 ```
 
 **Disk space:** C: may be full. Always install into this project on **E:** (or whatever drive holds the project):

@@ -217,6 +217,9 @@ class MusicAgentApp(ctk.CTk):
         MUSIC_DIR.mkdir(parents=True, exist_ok=True)
         if sys.platform == "win32":
             os.startfile(str(MUSIC_DIR))
+        elif sys.platform == "darwin":
+            import subprocess
+            subprocess.run(["open", str(MUSIC_DIR)], check=False)
         else:
             import subprocess
             subprocess.run(["xdg-open", str(MUSIC_DIR)], check=False)

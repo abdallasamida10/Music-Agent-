@@ -1,0 +1,96 @@
+name: Build Executables for Windows and macOS
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            asset_name: MusicAgent.exe
+            artifact_name: MusicAgent-Windows
+          - os: macos-latest
+            asset_name: MusicAgent
+            artifact_name: MusicAgent-macOS
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Executable with PyInstaller
+        run: python build.py
+
+      - name: Test Executable Help Output (Windows)
+        if: matrix.os == 'windows-latest'
+        run: .\MusicAgent.exe --help
+
+      - name: Test Executable Help Output (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          chmod +x ./MusicAgent
+          ./MusicAgent --help
+
+      - name: Upload Binary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.asset_name }}
+
+  release:
+    name: Release Binaries
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Windows Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: MusicAgent-Windows
+
+      - name: Download macOS Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: MusicAgent-macOS
+
+      - name: Display Downloaded Files
+        run: ls -la
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest Release
+          body: |
+            Automated standalone executables for Music Agent:
+            - `MusicAgent.exe` for Windows
+            - `MusicAgent` for macOS (run `chmod +x MusicAgent` before launching)
+            
+            Note: `ffmpeg` is required on your system PATH for MP3 conversion.
+          files: |
+            MusicAgent.exe
+            MusicAgent
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

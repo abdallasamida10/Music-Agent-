@@ -1,100 +1,70 @@
-# Music Download Agent
+# 🎵 Music Download Agent
 
-CLI agent that takes song names (English or **Arabic**), finds them on YouTube, converts to **MP3** (highest quality), and saves files into the `Music` folder.
+A fast, cross-platform application that converts song names (English or **Arabic**) to high-quality **MP3** files saved into your `Music/` folder.
 
-## How it works
+Supports both **Windows** (`MusicAgent.exe`) and **macOS** (`MusicAgent`).
 
-1. You run `start` and send song names.
-2. Agent searches YouTube for each name (**exactly 1 video** — top hit only).
-3. **Primary:** opens [ytmp3vid.org](https://www.ytmp3vid.org/) and converts at highest quality (320 kbps when available).
-4. **Fallback:** if the website fails, downloads with **yt-dlp** + **ffmpeg**.
-5. MP3s land in `Music/` — **1 song name → 1 MP3 file** (never 2–3 files for one name).
+---
 
-### One song per name (important)
+## ⚡ Quick Start
 
-| Rule | Behavior |
-|------|----------|
-| 1 name | 1 YouTube result (`ytsearch1`) |
-| 1 name | 1 MP3 file, named after your song name |
-| Same video twice | Second name is **skipped** if it hits the same video already saved |
-| Not done | Chat “simulation” does **not** download — only running `start` / `agent.py` does |
+### 🪟 Windows Users
+1. Download `MusicAgent.exe` from [GitHub Releases](https://github.com/abdallasamida10/Music-Agent-/releases/latest).
+2. Double-click `MusicAgent.exe` to open the Graphical User Interface (GUI).
+3. Paste song names (one per line) and click **🚀 Start Download**.
 
-## First-time setup
+### 🍏 macOS Users
+1. Download `MusicAgent` from [GitHub Releases](https://github.com/abdallasamida10/Music-Agent-/releases/latest).
+2. Open Terminal in the download directory and make it executable:
+   ```bash
+   chmod +x MusicAgent
+   ./MusicAgent
+   ```
+3. *(If macOS shows a security warning)*: Go to **System Settings > Privacy & Security** and click **Open Anyway**, or run:
+   ```bash
+   xattr -d com.apple.quarantine MusicAgent
+   ```
 
-Open PowerShell in this folder:
+---
 
-```powershell
-.\setup.ps1
+## 🚀 Features
+
+- **Cross-Platform**: Standalone executables for both Windows & macOS — no Python installation needed!
+- **High Performance**: Multithreaded parallel processing (downloads multiple songs concurrently).
+- **Arabic & UTF-8 Support**: Full support for international title queries and safe file naming.
+- **Smart Deduplication**: Automatically skips songs or YouTube video IDs already downloaded.
+- **Automatic Output**: All MP3 files are neatly organized inside `./Music/`.
+
+---
+
+## 🛠 System Requirement: FFmpeg
+
+The application relies on `ffmpeg` for extracting and encoding MP3 audio.
+
+- **Windows**: Install via `winget install ffmpeg` or download from [ffmpeg.org](https://ffmpeg.org).
+- **macOS**: Install via Homebrew:
+  ```bash
+  brew install ffmpeg
+  ```
+
+---
+
+## 💻 Developer / Building from Source
+
+To build standalone executables locally from source:
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+pip install pyinstaller
+
+# Run cross-platform build script
+python build.py
 ```
 
-This creates `.venv`, installs `yt-dlp` + `playwright`, and downloads Chromium.
+Automated cross-platform builds run on every push to `main` via **GitHub Actions**.
 
-**All installs stay in this project folder** (`.venv`, `.playwright-browsers`, `.cache`) so a full **C:** drive is not used for Playwright (~180 MB Chromium).
+---
 
-Requires: **Python 3**, **ffmpeg** on PATH (already common via Chocolatey/`winget install ffmpeg`).
-
-## Daily use
-
-```bat
-start
-```
-
-Or:
-
-```powershell
-.\start.bat
-.\start.ps1
-.\.venv\Scripts\python.exe agent.py
-```
-
-### After opening (`start.bat`)
-
-```
-Write start to begin
->
-```
-
-Type **`start`**, then:
-
-```
-Send all the music names
-  • Paste one song per line, then empty line or 'done'
-  • Or type 'one' for one-by-one mode
-  • Arabic names supported | 'exit' to quit
-```
-
-**Batch example:**
-
-```
-Despacito
-أم كلثوم الأطلال
-Bohemian Rhapsody
-done
-```
-
-**One-by-one:** type `one`, then enter names after each download; type `done` to finish.
-
-**CLI shortcuts:**
-
-```powershell
-.\start.bat "song one" "أغنية"
-.\start.bat --one
-.\start.bat --skip-ytmp3 "song name"
-```
-
-### Environment variables
-
-| Variable     | Meaning                                      |
-|--------------|----------------------------------------------|
-| `HEADLESS=0` | Show the browser during ytmp3vid automation  |
-| `SKIP_YTMP3=1` | Skip website; use yt-dlp only              |
-
-## Output
-
-All files: `Music/` (inside the project folder)
-
-## Notes
-
-- Use only for content you have the right to download/convert.
-- Converter websites change often; yt-dlp fallback keeps the agent working.
-- Any AI agent (Grok, Claude, Cursor, Codex, …) can operate this project — see **AGENTS.md**.
+## 📄 License
+MIT License

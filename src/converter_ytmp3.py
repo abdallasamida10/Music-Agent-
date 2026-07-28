@@ -71,11 +71,17 @@ def download_mp3(url: str, music_dir: Path, preferred_name: str | None = None) -
     apply_local_env()
     music_dir.mkdir(parents=True, exist_ok=True)
     headless = os.environ.get("HEADLESS", "1").strip() not in ("0", "false", "False", "no")
-    if not any(BROWSERS_DIR.rglob("chrome.exe")):
+    has_browser = (
+        any(BROWSERS_DIR.rglob("chrome.exe"))
+        or any(BROWSERS_DIR.rglob("chrome"))
+        or any(BROWSERS_DIR.rglob("Chromium"))
+        or any(BROWSERS_DIR.rglob("chromium"))
+    )
+    if not has_browser:
         _record_failure()
         raise Ytmp3Error(
             f"Playwright Chromium not found in {BROWSERS_DIR}. "
-            "Run setup.ps1 (installs browsers into this project folder)."
+            "Please ensure browser binaries are installed."
         )
 
     try:
