@@ -229,6 +229,18 @@ class MusicAgentApp(ctk.CTk):
     def _run_git_update_bg(self) -> None:
         import subprocess
         try:
+            git_dir = ROOT / ".git"
+            if getattr(sys, "frozen", False) or not git_dir.exists():
+                self.after(
+                    0,
+                    lambda: self._on_update_result(
+                        "ℹ️ Standalone",
+                        "⚠️ Running standalone version (Not a Git repo).",
+                        "#f9e2af",
+                    ),
+                )
+                return
+
             env = dict(os.environ)
             env["GIT_TERMINAL_PROMPT"] = "0"
             res = subprocess.run(
@@ -246,8 +258,12 @@ class MusicAgentApp(ctk.CTk):
                 self.after(0, lambda: self._on_update_result("✅ Updated!", "✨ App updated successfully from GitHub!", "#a6e3a1"))
             elif "could not read Username" in out or "terminal prompts disabled" in out or "Authentication" in out or "denied" in out:
                 self.after(0, lambda: self._on_update_result("🔒 Private Repo", "⚠️ Repository is private and requires access permissions.", "#f9e2af"))
+            elif "not a git repository" in out.lower():
+                self.after(0, lambda: self._on_update_result("ℹ️ Standalone", "⚠️ Running standalone version (Not a Git repo).", "#f9e2af"))
             else:
                 self.after(0, lambda: self._on_update_result("❌ Failed", f"Update failed: {out[:40]}", "#f38ba8"))
+        except FileNotFoundError:
+            self.after(0, lambda: self._on_update_result("⚠️ No Git", "⚠️ Git is not installed on this machine.", "#f9e2af"))
         except Exception as e:
             self.after(0, lambda: self._on_update_result("❌ Error", f"Update error: {e}", "#f38ba8"))
 
