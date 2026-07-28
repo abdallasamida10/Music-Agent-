@@ -76,6 +76,11 @@ jobs:
       - name: Display Downloaded Files
         run: ls -la
 
+      - name: Create ZIP Archives
+        run: |
+          zip MusicAgent-Windows.zip MusicAgent.exe
+          zip MusicAgent-macOS.zip MusicAgent
+
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -83,13 +88,14 @@ jobs:
           name: Latest Release
           body: |
             Automated standalone executables for Music Agent:
-            - `MusicAgent.exe` for Windows
-            - `MusicAgent` for macOS (run `chmod +x MusicAgent` before launching)
             
-            Note: `ffmpeg` is required on your system PATH for MP3 conversion.
+            - 🪟 **Windows**: Download `MusicAgent-Windows.zip`, extract, and run `MusicAgent.exe`.
+            - 🍏 **macOS**: Download `MusicAgent-macOS.zip`, extract, run `chmod +x MusicAgent`, and launch.
+            
+            *Note: `ffmpeg` is required on your system PATH for MP3 conversion.*
           files: |
-            MusicAgent.exe
-            MusicAgent
+            MusicAgent-Windows.zip
+            MusicAgent-macOS.zip
           draft: false
           prerelease: false
         env:
