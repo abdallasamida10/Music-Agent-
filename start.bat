@@ -17,16 +17,17 @@ if not exist "%~dp0.cache\tmp" mkdir "%~dp0.cache\tmp"
 if not exist "%~dp0Music" mkdir "%~dp0Music"
 if not exist "%~dp0.playwright-browsers" mkdir "%~dp0.playwright-browsers"
 
-if exist "%~dp0.venv\Scripts\python.exe" (
+if exist "%~dp0.venv\Scripts\pythonw.exe" (
+  start "" "%~dp0.venv\Scripts\pythonw.exe" "%~dp0agent.py" %*
+) else if exist "%~dp0.venv\Scripts\python.exe" (
   "%~dp0.venv\Scripts\python.exe" "%~dp0agent.py" %*
 ) else (
-  where py >nul 2>&1 && (
-    py -3 "%~dp0agent.py" %*
+  where pyw >nul 2>&1 && (
+    start "" pyw -3 "%~dp0agent.py" %*
   ) || (
     python "%~dp0agent.py" %*
   )
 )
 
-echo.
-pause
 endlocal
+

@@ -56,6 +56,16 @@ def main(argv: list[str] | None = None) -> int:
         help="Song names to download",
     )
     parser.add_argument(
+        "--gui",
+        action="store_true",
+        help="Launch graphical user interface (GUI)",
+    )
+    parser.add_argument(
+        "--cli",
+        action="store_true",
+        help="Force command-line interface interactive mode",
+    )
+    parser.add_argument(
         "--skip-ytmp3",
         action="store_true",
         help="Use yt-dlp only (skip website automation)",
@@ -89,6 +99,22 @@ def main(argv: list[str] | None = None) -> int:
     music_dir = MUSIC_DIR
     music_dir.mkdir(parents=True, exist_ok=True)
 
+    # CLI with song args skips interactive UI
+    if args.songs:
+        skip = args.skip_ytmp3 or os.environ.get("SKIP_YTMP3", "").strip() in ("1", "true", "yes")
+        workers = args.workers if args.workers > 0 else (1 if args.sequential else 50)
+        return _run_batch(list(args.songs), music_dir, skip, max_workers=workers)
+
+    # If --gui requested or default interactive startup without --cli, launch Desktop GUI
+    if args.gui or not args.cli:
+        try:
+            from gui import MusicAgentApp
+            app = MusicAgentApp()
+            app.mainloop()
+            return 0
+        except Exception as err:
+            print(f"[!] Unable to start GUI ({err}). Falling back to terminal mode...")
+
     skip = args.skip_ytmp3 or os.environ.get("SKIP_YTMP3", "").strip() in (
         "1",
         "true",
@@ -102,6 +128,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             # Default: 50 parallel workers (auto-parallel)
             workers = 50
+
 
     ui.print_banner(music_dir)
 

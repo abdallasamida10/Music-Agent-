@@ -34,7 +34,7 @@ class MultiSongProgress:
     """Manages multi-bar parallel progress display using Rich."""
 
     def __init__(self, enabled: bool = True) -> None:
-        self.enabled = enabled and HAS_RICH and sys.stdout.isatty()
+        self.enabled = enabled and HAS_RICH and (sys.stdout is not None) and sys.stdout.isatty()
         self.progress: Progress | None = None
         self.tasks: dict[str, TaskID] = {}
         self._start_time: float | None = None

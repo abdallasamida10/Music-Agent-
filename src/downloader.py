@@ -117,6 +117,17 @@ def process_song(
     def _ytdlp_progress_cb(data: dict) -> None:
         if progress:
             progress.update_yt_dlp(query, data)
+        if data.get("status") == "downloading":
+            total = data.get("total_bytes") or data.get("total_bytes_estimate") or 0
+            downloaded = data.get("downloaded_bytes") or 0
+            if total > 0:
+                pct = int((downloaded / total) * 100)
+                _log(f"⚡ {query} ({pct}%)")
+            else:
+                _log(f"⚡ {query} (downloading...)")
+        elif data.get("status") == "finished":
+            _log(f"⚡ {query} (converting to MP3...)")
+
 
     # Try ytmp3vid unless skipped or circuit breaker is open
     if not skip_ytmp3 and not is_circuit_open():

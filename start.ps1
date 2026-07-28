@@ -23,12 +23,14 @@ foreach ($d in @(
     if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d | Out-Null }
 }
 
-$venvPython = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
-if (Test-Path $venvPython) {
+$venvPythonW = Join-Path $PSScriptRoot ".venv\Scripts\pythonw.exe"
+$venvPython  = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
+
+if ((Test-Path $venvPythonW) -and ($args -notcontains "--cli")) {
+    Start-Process $venvPythonW -ArgumentList (Join-Path $PSScriptRoot "agent.py"), $args
+} elseif (Test-Path $venvPython) {
     & $venvPython (Join-Path $PSScriptRoot "agent.py") @args
 } else {
     python (Join-Path $PSScriptRoot "agent.py") @args
 }
 
-Write-Host ""
-Read-Host -Prompt "Press Enter to exit..."
