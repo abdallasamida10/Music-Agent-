@@ -17,16 +17,28 @@ if not exist "%~dp0.cache\tmp" mkdir "%~dp0.cache\tmp"
 if not exist "%~dp0Music" mkdir "%~dp0Music"
 if not exist "%~dp0.playwright-browsers" mkdir "%~dp0.playwright-browsers"
 
-if exist "%~dp0.venv\Scripts\pythonw.exe" (
-  start "" "%~dp0.venv\Scripts\pythonw.exe" "%~dp0agent.py" %*
-) else if exist "%~dp0.venv\Scripts\python.exe" (
-  "%~dp0.venv\Scripts\python.exe" "%~dp0agent.py" %*
-) else (
-  where pyw >nul 2>&1 && (
-    start "" pyw -3 "%~dp0agent.py" %*
-  ) || (
-    python "%~dp0agent.py" %*
+rem Check if virtual environment exists. If not, auto-run setup.ps1
+if not exist "%~dp0.venv\Scripts\python.exe" (
+  echo [!] Virtual environment ^(.venv^) not found.
+  echo [*] Auto-running setup.ps1 to install required dependencies...
+  echo.
+  powershell -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
+  if errorlevel 1 (
+    echo.
+    echo [X] Setup failed. Please check your Python installation and internet connection.
+    echo.
+    pause
+    exit /b 1
   )
+)
+
+rem Run agent.py using .venv Python
+"%~dp0.venv\Scripts\python.exe" "%~dp0agent.py" %*
+if errorlevel 1 (
+  echo.
+  echo [!] Application closed due to an error above.
+  echo.
+  pause
 )
 
 endlocal

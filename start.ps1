@@ -23,14 +23,22 @@ foreach ($d in @(
     if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d | Out-Null }
 }
 
-$venvPythonW = Join-Path $PSScriptRoot ".venv\Scripts\pythonw.exe"
-$venvPython  = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
+$venvPython = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
 
-if ((Test-Path $venvPythonW) -and ($args -notcontains "--cli")) {
-    Start-Process $venvPythonW -ArgumentList (Join-Path $PSScriptRoot "agent.py"), $args
-} elseif (Test-Path $venvPython) {
-    & $venvPython (Join-Path $PSScriptRoot "agent.py") @args
-} else {
-    python (Join-Path $PSScriptRoot "agent.py") @args
+if (-not (Test-Path $venvPython)) {
+    Write-Host "[!] Virtual environment (.venv) not found on this machine." -ForegroundColor Yellow
+    Write-Host "[*] Running setup.ps1 automatically to install dependencies..." -ForegroundColor Cyan
+    & (Join-Path $PSScriptRoot "setup.ps1")
 }
 
+if (Test-Path $venvPython) {
+    & $venvPython (Join-Path $PSScriptRoot "agent.py") @args
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ""
+        Write-Host "[!] Application exited with error code $LASTEXITCODE." -ForegroundColor Red
+        Read-Host "Press Enter to exit..."
+    }
+} else {
+    Write-Host "[X] Could not find Python virtual environment. Please run setup.ps1 manually." -ForegroundColor Red
+    Read-Host "Press Enter to exit..."
+}

@@ -113,7 +113,15 @@ def main(argv: list[str] | None = None) -> int:
             app.mainloop()
             return 0
         except Exception as err:
-            print(f"[!] Unable to start GUI ({err}). Falling back to terminal mode...")
+            print(f"[!] Unable to start GUI ({err}).")
+            print("[!] Please ensure setup.ps1 has been executed on this machine:")
+            print("    powershell -ExecutionPolicy Bypass -File setup.ps1")
+            print()
+            try:
+                input("Press Enter to exit...")
+            except Exception:
+                pass
+            return 1
 
     skip = args.skip_ytmp3 or os.environ.get("SKIP_YTMP3", "").strip() in (
         "1",
