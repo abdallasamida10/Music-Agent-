@@ -5,8 +5,14 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-# Project root = parent of src/
-ROOT = Path(__file__).resolve().parent.parent
+import sys
+
+# Project root: if compiled with PyInstaller, use executable directory; otherwise use parent of src/
+if getattr(sys, "frozen", False):
+    ROOT = Path(sys.executable).resolve().parent
+else:
+    ROOT = Path(__file__).resolve().parent.parent
+
 MUSIC_DIR = (ROOT / "Music").resolve()
 CACHE_DIR = (ROOT / ".cache").resolve()
 BROWSERS_DIR = (ROOT / ".playwright-browsers").resolve()
