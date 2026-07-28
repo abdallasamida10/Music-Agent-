@@ -6,24 +6,66 @@ Supports both **Windows** (`MusicAgent.exe`) and **macOS** (`MusicAgent`).
 
 ---
 
-## ⚡ Quick Start
+## ⚡ Detailed Step-by-Step Guide (Baby Steps)
 
 ### 🪟 Windows Users
-1. Download `MusicAgent.exe` from [GitHub Releases](https://github.com/abdallasamida10/Music-Agent-/releases/latest).
-2. Double-click `MusicAgent.exe` to open the Graphical User Interface (GUI).
-3. Paste song names (one per line) and click **🚀 Start Download**.
+
+1. **Download the Package**:
+   - Go to the [Latest GitHub Release](https://github.com/abdallasamida10/Music-Agent-/releases/latest).
+   - Download **`MusicAgent-Windows.zip`**.
+2. **Extract the ZIP**:
+   - Right-click `MusicAgent-Windows.zip` and select **Extract All...** (or use WinRAR / 7-Zip).
+   - Open the extracted folder.
+3. **Check FFmpeg Requirement**:
+   - FFmpeg is required to process MP3 audio.
+   - If you don't have it installed, open Command Prompt or PowerShell and run:
+     ```cmd
+     winget install ffmpeg
+     ```
+   - Or place `ffmpeg.exe` directly inside the same folder as `MusicAgent.exe`.
+4. **Launch the Application**:
+   - Double-click **`MusicAgent.exe`** to open the Graphical User Interface (GUI).
+5. **Start Downloading**:
+   - Type or paste your song names (one per line — Arabic & English supported).
+   - Click **🚀 Start Download**.
+   - Your downloaded MP3 files will automatically appear inside the **`Music/`** folder!
+
+---
 
 ### 🍏 macOS Users
-1. Download `MusicAgent` from [GitHub Releases](https://github.com/abdallasamida10/Music-Agent-/releases/latest).
-2. Open Terminal in the download directory and make it executable:
-   ```bash
-   chmod +x MusicAgent
-   ./MusicAgent
-   ```
-3. *(If macOS shows a security warning)*: Go to **System Settings > Privacy & Security** and click **Open Anyway**, or run:
-   ```bash
-   xattr -d com.apple.quarantine MusicAgent
-   ```
+
+1. **Download the Package**:
+   - Go to the [Latest GitHub Release](https://github.com/abdallasamida10/Music-Agent-/releases/latest).
+   - Download **`MusicAgent-macOS.zip`**.
+2. **Extract the ZIP**:
+   - Double-click `MusicAgent-macOS.zip` to extract the `MusicAgent` binary into your **Downloads** folder.
+3. **Install FFmpeg**:
+   - Open the **Terminal** app and install FFmpeg using Homebrew:
+     ```bash
+     brew install ffmpeg
+     ```
+4. **Make Binary Executable**:
+   - In Terminal, navigate to your Downloads directory:
+     ```bash
+     cd ~/Downloads
+     ```
+   - Grant execution permission to the binary:
+     ```bash
+     chmod +x MusicAgent
+     ```
+5. **Launch & Handle macOS Security Warning**:
+   - Launch the app from Terminal:
+     ```bash
+     ./MusicAgent
+     ```
+   - **If macOS blocks execution** with *"Developer cannot be verified"* or *"Unidentified Developer"*:
+     - **Method A (GUI)**: Open **System Settings ⚙️ > Privacy & Security**, scroll down to the *Security* section, and click **Open Anyway**.
+     - **Method B (Terminal Command)**: Remove the quarantine attribute by running:
+       ```bash
+       xattr -d com.apple.quarantine MusicAgent
+       ```
+6. **Start Downloading**:
+   - Enter your song titles and click **🚀 Start Download**. MP3s will be saved in `./Music/`.
 
 ---
 

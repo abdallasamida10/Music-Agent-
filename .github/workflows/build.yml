@@ -87,12 +87,27 @@ jobs:
           tag_name: latest
           name: Latest Release
           body: |
-            Automated standalone executables for Music Agent:
+            ### 🎵 Music Agent Standalone Releases
+
+            #### 🪟 Windows Users
+            1. Download **`MusicAgent-Windows.zip`** below and extract it.
+            2. Double-click **`MusicAgent.exe`** to launch the GUI.
+            3. Ensure `ffmpeg` is installed (`winget install ffmpeg`).
+
+            #### 🍏 macOS Users
+            1. Download **`MusicAgent-macOS.zip`** below and unzip it (`MusicAgent`).
+            2. Open Terminal in your Downloads folder:
+               ```bash
+               cd ~/Downloads
+               chmod +x MusicAgent
+               ./MusicAgent
+               ```
+            3. If macOS blocks execution: Go to **System Settings > Privacy & Security** and click **Open Anyway**, or run:
+               ```bash
+               xattr -d com.apple.quarantine MusicAgent
+               ```
             
-            - 🪟 **Windows**: Download `MusicAgent-Windows.zip`, extract, and run `MusicAgent.exe`.
-            - 🍏 **macOS**: Download `MusicAgent-macOS.zip`, extract, run `chmod +x MusicAgent`, and launch.
-            
-            *Note: `ffmpeg` is required on your system PATH for MP3 conversion.*
+            *Note: `ffmpeg` is required on system PATH for MP3 audio conversion.*
           files: |
             MusicAgent-Windows.zip
             MusicAgent-macOS.zip
