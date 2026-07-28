@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.mp3
+Music/*
+!Music/.gitkeep
+.playwright/
+.playwright-browsers/
+.cache/
+*.log
+.env
+.DS_Store
+Thumbs.db
