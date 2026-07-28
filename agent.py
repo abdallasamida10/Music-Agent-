@@ -29,6 +29,7 @@ from src.paths import MUSIC_DIR, apply_local_env
 apply_local_env()
 
 from src import ui
+ui.ensure_utf8()
 from src.arming import (
     REFUSAL_MESSAGE,
     extract_from_user_list,

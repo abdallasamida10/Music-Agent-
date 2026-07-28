@@ -15,6 +15,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 
+if sys.platform == "win32":
+    for stream in (sys.stdout, sys.stderr):
+        if stream is not None:
+            try:
+                stream.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+
 def get_customtkinter_path() -> Path:
     import customtkinter
     return Path(customtkinter.__file__).parent
@@ -57,15 +65,15 @@ def main() -> int:
             target = ROOT / f"{app_name}.exe"
             if exe_path.exists():
                 shutil.copy2(exe_path, target)
-                print(f"[✅] Successfully created Windows executable: {target}")
+                print(f"[OK] Successfully created Windows executable: {target}")
         else:
             bin_path = dist_dir / app_name
             target = ROOT / app_name
             if bin_path.exists():
                 shutil.copy2(bin_path, target)
-                print(f"[✅] Successfully created macOS binary: {target}")
+                print(f"[OK] Successfully created macOS binary: {target}")
     else:
-        print("[❌] Build failed!")
+        print("[FAIL] Build failed!")
 
     return result.returncode
 

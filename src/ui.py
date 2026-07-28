@@ -2,17 +2,35 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
 
 def ensure_utf8() -> None:
     """Best-effort UTF-8 console setup for Arabic and other scripts on Windows."""
+    if sys.stdout is None or sys.stderr is None:
+        if sys.platform == "win32":
+            try:
+                import ctypes
+                if ctypes.windll.kernel32.AttachConsole(-1):
+                    if sys.stdout is None:
+                        sys.stdout = open("CONOUT$", "w", encoding="utf-8", buffering=1)
+                    if sys.stderr is None:
+                        sys.stderr = open("CONOUT$", "w", encoding="utf-8", buffering=1)
+            except Exception:
+                pass
+        if sys.stdout is None:
+            sys.stdout = open(os.devnull, "w", encoding="utf-8")
+        if sys.stderr is None:
+            sys.stderr = open(os.devnull, "w", encoding="utf-8")
+
     for stream in (sys.stdout, sys.stderr, sys.stdin):
-        try:
-            stream.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
-        except Exception:
-            pass
+        if stream is not None:
+            try:
+                stream.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+            except Exception:
+                pass
 
 
 def print_banner(music_dir: Path) -> None:
