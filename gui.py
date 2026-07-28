@@ -227,43 +227,75 @@ class MusicAgentApp(ctk.CTk):
         threading.Thread(target=self._run_git_update_bg, daemon=True).start()
 
     def _run_git_update_bg(self) -> None:
+        import io
+        import shutil
         import subprocess
-        try:
-            git_dir = ROOT / ".git"
-            if getattr(sys, "frozen", False) or not git_dir.exists():
-                self.after(
-                    0,
-                    lambda: self._on_update_result(
-                        "ℹ️ Standalone",
-                        "⚠️ Running standalone version (Not a Git repo).",
-                        "#f9e2af",
-                    ),
-                )
-                return
+        import urllib.request
+        import zipfile
 
-            env = dict(os.environ)
-            env["GIT_TERMINAL_PROMPT"] = "0"
-            res = subprocess.run(
-                ["git", "pull"],
-                cwd=str(ROOT),
-                capture_output=True,
-                text=True,
-                timeout=30,
-                env=env,
+        # Method 1: If git directory exists, try git pull first
+        git_dir = ROOT / ".git"
+        if git_dir.exists():
+            try:
+                env = dict(os.environ)
+                env["GIT_TERMINAL_PROMPT"] = "0"
+                res = subprocess.run(
+                    ["git", "pull"],
+                    cwd=str(ROOT),
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    env=env,
+                )
+                out = (res.stdout or res.stderr or "").strip()
+                if "Already up to date" in out or "Already up-to-date" in out:
+                    self.after(0, lambda: self._on_update_result("✅ Up to date", "✨ App is already up to date!", "#a6e3a1"))
+                    return
+                elif res.returncode == 0:
+                    self.after(0, lambda: self._on_update_result("✅ Updated!", "✨ App updated successfully from GitHub!", "#a6e3a1"))
+                    return
+            except Exception:
+                pass  # Fall back to direct ZIP download below
+
+        # Method 2: Direct HTTP download from public GitHub repo (works on any PC without git!)
+        try:
+            repo_zip_url = "https://github.com/abdallasamida10/Music-Agent-/archive/refs/heads/main.zip"
+            req = urllib.request.Request(
+                repo_zip_url,
+                headers={"User-Agent": "MusicAgent-Updater/1.0"},
             )
-            out = (res.stdout or res.stderr or "").strip()
-            if "Already up to date" in out or "Already up-to-date" in out:
-                self.after(0, lambda: self._on_update_result("✅ Up to date", "✨ App is already up to date!", "#a6e3a1"))
-            elif res.returncode == 0:
-                self.after(0, lambda: self._on_update_result("✅ Updated!", "✨ App updated successfully from GitHub!", "#a6e3a1"))
-            elif "could not read Username" in out or "terminal prompts disabled" in out or "Authentication" in out or "denied" in out:
-                self.after(0, lambda: self._on_update_result("🔒 Private Repo", "⚠️ Repository is private and requires access permissions.", "#f9e2af"))
-            elif "not a git repository" in out.lower():
-                self.after(0, lambda: self._on_update_result("ℹ️ Standalone", "⚠️ Running standalone version (Not a Git repo).", "#f9e2af"))
-            else:
-                self.after(0, lambda: self._on_update_result("❌ Failed", f"Update failed: {out[:40]}", "#f38ba8"))
-        except FileNotFoundError:
-            self.after(0, lambda: self._on_update_result("⚠️ No Git", "⚠️ Git is not installed on this machine.", "#f9e2af"))
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                zip_bytes = resp.read()
+
+            with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+                namelist = zf.namelist()
+                if not namelist:
+                    raise RuntimeError("Downloaded ZIP is empty")
+                top_prefix = namelist[0].split("/")[0] + "/"
+
+                updated_files = 0
+                for member in zf.infolist():
+                    rel_path = member.filename
+                    if not rel_path.startswith(top_prefix):
+                        continue
+                    clean_rel = rel_path[len(top_prefix):]
+                    if not clean_rel or member.is_dir():
+                        continue
+
+                    # Protect user data and local environment folders from being overwritten
+                    skip_prefixes = ("Music/", ".venv/", ".cache/", ".playwright-browsers/", "dist/", "build/")
+                    if any(clean_rel.startswith(sp) for sp in skip_prefixes):
+                        continue
+                    if clean_rel == "MusicAgent.exe":
+                        continue
+
+                    target_file = ROOT / clean_rel
+                    target_file.parent.mkdir(parents=True, exist_ok=True)
+                    with zf.open(member) as src_file, open(target_file, "wb") as dst_file:
+                        shutil.copyfileobj(src_file, dst_file)
+                    updated_files += 1
+
+            self.after(0, lambda: self._on_update_result("✅ Updated!", f"✨ Updated from GitHub repository ({updated_files} files)!", "#a6e3a1"))
         except Exception as e:
             self.after(0, lambda: self._on_update_result("❌ Error", f"Update error: {e}", "#f38ba8"))
 
