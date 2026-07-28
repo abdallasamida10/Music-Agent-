@@ -53,6 +53,7 @@ def check_existing_song(query: str, music_dir: Path) -> Path | None:
     Check if an MP3 file matching the user query already exists in music_dir.
     Returns the Path if found and valid (>0 bytes), otherwise None.
     """
+    music_dir = music_dir.resolve()
     with _LOCK:
         # Check 1: direct filename match
         safe_name = safe_filename(query)
@@ -65,7 +66,12 @@ def check_existing_song(query: str, music_dir: Path) -> Path | None:
         norm_query = query.strip().casefold()
         reg_info = registry["queries"].get(norm_query)
         if reg_info:
-            target_path = Path(reg_info.get("path", ""))
+            stored_path = reg_info.get("path", "")
+            # Check relative to music_dir first (machine-independent)
+            local_cand = music_dir / Path(stored_path).name
+            if local_cand.exists() and local_cand.is_file() and local_cand.stat().st_size > 0:
+                return local_cand
+            target_path = Path(stored_path)
             if target_path.exists() and target_path.is_file() and target_path.stat().st_size > 0:
                 return target_path
 
@@ -85,11 +91,16 @@ def check_existing_video_id(video_id: str, music_dir: Path) -> Path | None:
     """Check if a video_id has already been downloaded and exists in music_dir."""
     if not video_id:
         return None
+    music_dir = music_dir.resolve()
     with _LOCK:
         registry = load_registry(music_dir)
         reg_info = registry["video_ids"].get(video_id)
         if reg_info:
-            target_path = Path(reg_info.get("path", ""))
+            stored_path = reg_info.get("path", "")
+            local_cand = music_dir / Path(stored_path).name
+            if local_cand.exists() and local_cand.is_file() and local_cand.stat().st_size > 0:
+                return local_cand
+            target_path = Path(stored_path)
             if target_path.exists() and target_path.is_file() and target_path.stat().st_size > 0:
                 return target_path
     return None
@@ -97,6 +108,7 @@ def check_existing_video_id(video_id: str, music_dir: Path) -> Path | None:
 
 def register_download(query: str, video_id: str, title: str, file_path: Path, music_dir: Path) -> None:
     """Register a successful download into the registry."""
+    music_dir = music_dir.resolve()
     with _LOCK:
         registry = load_registry(music_dir)
         norm_query = query.strip().casefold()
@@ -104,7 +116,8 @@ def register_download(query: str, video_id: str, title: str, file_path: Path, mu
             "query": query,
             "title": title,
             "video_id": video_id,
-            "path": str(file_path),
+            "path": file_path.name,
+            "abs_path": str(file_path.resolve()),
         }
         registry["queries"][norm_query] = info
         if video_id:

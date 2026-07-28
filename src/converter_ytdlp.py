@@ -137,7 +137,8 @@ def download_mp3(
                         except Exception:
                             pass
                         return target
-                    written.replace(target)
+                    import shutil
+                    shutil.move(str(written), str(target))
                 return target
 
             base = music_dir / f"{safe_filename(title)}.mp3"

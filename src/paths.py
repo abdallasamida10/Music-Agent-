@@ -7,12 +7,12 @@ from pathlib import Path
 
 # Project root = parent of src/
 ROOT = Path(__file__).resolve().parent.parent
-MUSIC_DIR = ROOT / "Music"
-CACHE_DIR = ROOT / ".cache"
-BROWSERS_DIR = ROOT / ".playwright-browsers"
-PIP_CACHE = CACHE_DIR / "pip"
-YTDLP_CACHE = CACHE_DIR / "yt-dlp"
-TEMP_DIR = CACHE_DIR / "tmp"
+MUSIC_DIR = (ROOT / "Music").resolve()
+CACHE_DIR = (ROOT / ".cache").resolve()
+BROWSERS_DIR = (ROOT / ".playwright-browsers").resolve()
+PIP_CACHE = (CACHE_DIR / "pip").resolve()
+YTDLP_CACHE = (CACHE_DIR / "yt-dlp").resolve()
+TEMP_DIR = (CACHE_DIR / "tmp").resolve()
 
 
 def ensure_local_dirs() -> None:
@@ -22,12 +22,17 @@ def ensure_local_dirs() -> None:
 
 def apply_local_env() -> None:
     """
-    Force tools to write under the project folder on E: (or wherever the project lives).
+    Force tools to write under the project folder on whatever drive the project lives (C:, E:, F:, etc.).
     Call this before importing/using playwright or yt-dlp when possible.
     """
+    try:
+        os.chdir(ROOT)
+    except Exception:
+        pass
+
     ensure_local_dirs()
 
-    # Playwright Chromium (~180MB+) — never default to %USERPROFILE% on C:
+    # Playwright Chromium (~180MB+) — keep in project folder
     os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(BROWSERS_DIR)
 
     # pip / temp scratch during installs
@@ -38,3 +43,4 @@ def apply_local_env() -> None:
 
     # yt-dlp cache
     os.environ.setdefault("XDG_CACHE_HOME", str(CACHE_DIR))
+

@@ -50,7 +50,7 @@ Automate: song name → YouTube search → MP3 (highest quality) → `Music/` fo
 ## Setup (once per machine)
 
 ```powershell
-cd "E:\MyFiles\Desktop\AI Agent"
+cd "<project_folder>"
 .\setup.ps1
 ```
 
@@ -79,7 +79,7 @@ Ensure `ffmpeg` is on PATH. If missing, install onto a drive with free space (no
 When the user says **start** in chat (not only in terminal), run the agent for them:
 
 ```powershell
-cd "E:\MyFiles\Desktop\AI Agent"
+cd "<project_folder>"
 .\.venv\Scripts\python.exe agent.py "Song A" "Song B"
 ```
 

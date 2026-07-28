@@ -91,7 +91,7 @@ done
 
 ## Output
 
-All files: `E:\MyFiles\Desktop\AI Agent\Music\`
+All files: `Music/` (inside the project folder)
 
 ## Notes
 
