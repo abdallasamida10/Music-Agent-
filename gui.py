@@ -304,7 +304,7 @@ class MusicAgentApp(ctk.CTk):
                     raise RuntimeError("Downloaded ZIP is empty")
                 top_prefix = namelist[0].split("/")[0] + "/"
 
-                updated_files = 0
+                changed_files = 0
                 for member in zf.infolist():
                     rel_path = member.filename
                     if not rel_path.startswith(top_prefix):
@@ -314,19 +314,31 @@ class MusicAgentApp(ctk.CTk):
                         continue
 
                     # Protect user data and local environment folders from being overwritten
-                    skip_prefixes = ("Music/", ".venv/", ".cache/", ".playwright-browsers/", "dist/", "build/")
+                    skip_prefixes = ("Music/", ".venv/", ".cache/", ".playwright-browsers/", "dist/", "build/", "logs/")
                     if any(clean_rel.startswith(sp) for sp in skip_prefixes):
                         continue
                     if clean_rel == "MusicAgent.exe":
                         continue
 
                     target_file = ROOT / clean_rel
-                    target_file.parent.mkdir(parents=True, exist_ok=True)
-                    with zf.open(member) as src_file, open(target_file, "wb") as dst_file:
-                        shutil.copyfileobj(src_file, dst_file)
-                    updated_files += 1
+                    new_bytes = zf.read(member)
 
-            self.after(0, lambda: self._on_update_result("✅ Updated!", f"✨ Updated from GitHub repository ({updated_files} files)!", "#a6e3a1"))
+                    # Check if target file already has identical contents
+                    if target_file.exists():
+                        try:
+                            if target_file.read_bytes() == new_bytes:
+                                continue
+                        except Exception:
+                            pass
+
+                    target_file.parent.mkdir(parents=True, exist_ok=True)
+                    target_file.write_bytes(new_bytes)
+                    changed_files += 1
+
+            if changed_files == 0:
+                self.after(0, lambda: self._on_update_result("✅ Up to date", "✨ App is already up to date!", "#a6e3a1"))
+            else:
+                self.after(0, lambda: self._on_update_result("✅ Updated!", f"✨ Updated {changed_files} file(s) from GitHub!", "#a6e3a1"))
         except Exception as e:
             self.after(0, lambda: self._on_update_result("❌ Error", f"Update error: {e}", "#f38ba8"))
 
