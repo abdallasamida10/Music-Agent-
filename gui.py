@@ -9,6 +9,7 @@ Automatically operates at maximum speed (fast yt-dlp mode + parallel multi-worke
 from __future__ import annotations
 
 import os
+import shutil
 import sys
 import threading
 import time
