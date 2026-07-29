@@ -52,3 +52,10 @@ def apply_local_env() -> None:
     # yt-dlp cache
     os.environ.setdefault("XDG_CACHE_HOME", str(CACHE_DIR))
 
+    # Add local project root and bin directories to PATH so local ffmpeg binaries are found
+    path_env = os.environ.get("PATH", "")
+    bin_paths = [str(ROOT), str(ROOT / "bin"), str(CACHE_DIR / "ffmpeg")]
+    new_paths = [p for p in bin_paths if p not in path_env]
+    if new_paths:
+        os.environ["PATH"] = os.pathsep.join(new_paths) + os.pathsep + path_env
+

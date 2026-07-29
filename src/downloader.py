@@ -173,11 +173,31 @@ def process_song(
         _log(f"  → OK (yt-dlp) → {path.name}")
         return result
     except Exception as e:
-        result["error"] = f"yt-dlp failed: {e}"
+        # Fallback to ytmp3vid web converter if yt-dlp fails (e.g., missing FFmpeg or extractor error)
+        if not is_circuit_open():
+            try:
+                _log(f"  → yt-dlp issue ({e}), attempting web converter fallback...")
+                path = converter_ytmp3.download_mp3(
+                    found.url, music_dir, preferred_name=preferred
+                )
+                result["ok"] = True
+                result["method"] = "ytmp3vid"
+                result["path"] = str(path)
+                if seen_video_ids is not None and found.video_id:
+                    seen_video_ids.add(found.video_id)
+                register_download(query, found.video_id, found.title, path, music_dir)
+                if progress:
+                    progress.mark_completed(query, "ytmp3vid")
+                _log(f"  → OK (web converter fallback) → {path.name}")
+                return result
+            except Exception as fallback_err:
+                _log(f"  → Web converter fallback failed: {fallback_err}")
+
+        result["error"] = f"Download failed: {e}"
         logger.error(f"Download failed for query '{query}' ({found.url}): {e}", exc_info=True)
         if progress:
             progress.mark_failed(query, str(e))
-        _log(f"  → FAIL yt-dlp: {e}")
+        _log(f"  → FAIL: {e}")
         return result
 
 

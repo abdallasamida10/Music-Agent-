@@ -396,8 +396,9 @@ class MusicAgentApp(ctk.CTk):
 
             self.song_widgets[song] = {"card": card, "status": badge_lbl}
 
-        # Automatically use maximum performance: Direct yt-dlp fast mode & 50 parallel workers
-        skip_ytmp3 = True
+        # Smart performance mode: use fast yt-dlp if FFmpeg is installed, otherwise allow ytmp3vid web converter
+        has_ffmpeg = bool(shutil.which("ffmpeg"))
+        skip_ytmp3 = has_ffmpeg
         max_workers = 50
 
         self.start_time = time.time()
