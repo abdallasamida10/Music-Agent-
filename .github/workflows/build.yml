@@ -91,13 +91,14 @@ jobs:
 
             #### 🪟 Windows Users
             1. Download **`MusicAgent-Windows.zip`** below and extract it.
-            2. Open the extracted folder and double-click **`MusicAgent.exe`** to launch.
+            2. Open the extracted **`MusicAgent`** folder and double-click **`MusicAgent.exe`** to launch.
             3. Ensure `ffmpeg` is installed (`winget install ffmpeg`).
 
             #### 🍏 macOS Users
             1. Download **`MusicAgent-macOS.zip`** below and extract it.
-            2. Open Terminal inside the extracted folder:
+            2. Open Terminal inside the extracted **`MusicAgent`** folder:
                ```bash
+               cd MusicAgent
                chmod +x MusicAgent
                ./MusicAgent
                ```

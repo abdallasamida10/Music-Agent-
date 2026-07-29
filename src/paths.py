@@ -16,13 +16,15 @@ else:
 MUSIC_DIR = (ROOT / "Music").resolve()
 CACHE_DIR = (ROOT / ".cache").resolve()
 BROWSERS_DIR = (ROOT / ".playwright-browsers").resolve()
+LOGS_DIR = (ROOT / "logs").resolve()
+LOG_FILE = (LOGS_DIR / "music_agent.log").resolve()
 PIP_CACHE = (CACHE_DIR / "pip").resolve()
 YTDLP_CACHE = (CACHE_DIR / "yt-dlp").resolve()
 TEMP_DIR = (CACHE_DIR / "tmp").resolve()
 
 
 def ensure_local_dirs() -> None:
-    for d in (MUSIC_DIR, CACHE_DIR, BROWSERS_DIR, PIP_CACHE, YTDLP_CACHE, TEMP_DIR):
+    for d in (MUSIC_DIR, CACHE_DIR, BROWSERS_DIR, LOGS_DIR, PIP_CACHE, YTDLP_CACHE, TEMP_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
 

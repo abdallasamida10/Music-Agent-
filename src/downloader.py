@@ -22,10 +22,12 @@ from .dedup import (
     register_download,
 )
 from .filenames import safe_filename
+from .logger import get_logger
 from .progress import MultiSongProgress
 from .youtube_search import SearchResult, search_youtube, search_youtube_batch
 
 LogFn = Callable[[str], None]
+logger = get_logger("downloader")
 
 
 def process_song(
@@ -83,6 +85,7 @@ def process_song(
             _log(f"  → URL: {found.url}")
         except Exception as e:
             result["error"] = f"YouTube search failed: {e}"
+            logger.error(f"YouTube search failed for query '{query}': {e}", exc_info=True)
             if progress:
                 progress.mark_failed(query, "search_failed")
             _log(f"  → FAIL search: {e}")
@@ -171,6 +174,7 @@ def process_song(
         return result
     except Exception as e:
         result["error"] = f"yt-dlp failed: {e}"
+        logger.error(f"Download failed for query '{query}' ({found.url}): {e}", exc_info=True)
         if progress:
             progress.mark_failed(query, str(e))
         _log(f"  → FAIL yt-dlp: {e}")

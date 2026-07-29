@@ -38,16 +38,16 @@ Supports both **Windows** (`MusicAgent.exe`) and **macOS** (`MusicAgent`).
    - Go to the [Latest GitHub Release](https://github.com/abdallasamida10/Music-Agent-/releases/latest).
    - Download **`MusicAgent-macOS.zip`**.
 2. **Extract the ZIP**:
-   - Double-click `MusicAgent-macOS.zip` to extract the `MusicAgent` binary into your **Downloads** folder.
+   - Double-click `MusicAgent-macOS.zip` to extract the `MusicAgent` folder into your **Downloads** directory.
 3. **Install FFmpeg**:
    - Open the **Terminal** app and install FFmpeg using Homebrew:
      ```bash
      brew install ffmpeg
      ```
 4. **Make Binary Executable**:
-   - In Terminal, navigate to your Downloads directory:
+   - In Terminal, navigate to the extracted `MusicAgent` directory:
      ```bash
-     cd ~/Downloads
+     cd ~/Downloads/MusicAgent
      ```
    - Grant execution permission to the binary:
      ```bash

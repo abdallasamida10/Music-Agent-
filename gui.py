@@ -29,13 +29,21 @@ ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.paths import MUSIC_DIR, apply_local_env
+from src.paths import MUSIC_DIR, LOGS_DIR, apply_local_env
 apply_local_env()
 
 import customtkinter as ctk
 
 from src.downloader import process_all
 from src.arming import extract_from_user_list, REFUSAL_MESSAGE
+from src.logger import (
+    setup_logging,
+    get_logger,
+    get_system_info,
+    read_logs,
+    get_error_counts,
+    clear_logs,
+)
 
 # Set CustomTkinter theme
 ctk.set_appearance_mode("Dark")
@@ -45,6 +53,10 @@ ctk.set_default_color_theme("blue")
 class MusicAgentApp(ctk.CTk):
     def __init__(self) -> None:
         super().__init__()
+
+        # Initialize logging
+        self.logger = setup_logging()
+        self.logger.info("Initializing MusicAgentApp GUI window.")
 
         self.title("Music Agent")
 
@@ -56,6 +68,7 @@ class MusicAgentApp(ctk.CTk):
         self.download_thread: Optional[threading.Thread] = None
         self.song_widgets: Dict[str, Dict[str, ctk.CTkLabel]] = {}
         self.start_time: float = 0.0
+        self.logs_window: Optional[LogsDialog] = None
 
         # UI Setup
         self._create_header()
@@ -89,7 +102,21 @@ class MusicAgentApp(ctk.CTk):
             corner_radius=8,
             command=self._check_update_click,
         )
-        self.update_btn.pack(side="right", padx=20, pady=12)
+        self.update_btn.pack(side="right", padx=(5, 20), pady=12)
+
+        self.logs_btn = ctk.CTkButton(
+            header_frame,
+            text="📑 Logs",
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            width=100,
+            height=32,
+            fg_color="#313244",
+            hover_color="#45475A",
+            text_color="#CDD6F4",
+            corner_radius=8,
+            command=self._open_logs_modal,
+        )
+        self.logs_btn.pack(side="right", padx=(5, 5), pady=12)
 
     def _create_input_section(self) -> None:
         """Main Song Input Card."""
@@ -510,6 +537,231 @@ class MusicAgentApp(ctk.CTk):
             text="🚀 Start Download",
             fg_color="#1E66F5",
         )
+
+    def _open_logs_modal(self) -> None:
+        """Open or focus the Error Tracking & Logs Toplevel window."""
+        if self.logs_window is None or not self.logs_window.winfo_exists():
+            self.logs_window = LogsDialog(self)
+        else:
+            self.logs_window.lift()
+            self.logs_window.focus_force()
+
+
+class LogsDialog(ctk.CTkToplevel):
+    def __init__(self, parent: ctk.CTk) -> None:
+        super().__init__(parent)
+
+        self.title("📋 Error Tracking & Application Logs")
+        self.geometry("780x580")
+        self.minsize(680, 480)
+
+        # Bring window to front
+        self.after(10, self.lift)
+        self.after(20, self.focus_force)
+
+        self._filter_mode = "ALL"
+
+        self._create_header_card()
+        self._create_filter_bar()
+        self._create_log_view()
+        self._create_footer_bar()
+
+        self._refresh_logs()
+
+    def _create_header_card(self) -> None:
+        card = ctk.CTkFrame(self, corner_radius=10, fg_color="#1E1E2E")
+        card.pack(fill="x", padx=15, pady=(15, 5))
+
+        title_lbl = ctk.CTkLabel(
+            card,
+            text="💻 Diagnostic & Error Tracking",
+            font=ctk.CTkFont(family="Segoe UI", size=16, weight="bold"),
+            text_color="#89B4FA",
+        )
+        title_lbl.pack(anchor="w", padx=15, pady=(10, 4))
+
+        info = get_system_info()
+        err_count, warn_count = get_error_counts()
+
+        info_text = (
+            f"OS: {info.get('OS', 'Unknown')}  |  Python: {info.get('Python', 'Unknown')}  |  "
+            f"FFmpeg: {info.get('FFmpeg', 'Unknown')}  |  yt-dlp: {info.get('yt-dlp', 'Unknown')}\n"
+            f"Logged in session: {err_count} Error(s), {warn_count} Warning(s)."
+        )
+
+        sub_lbl = ctk.CTkLabel(
+            card,
+            text=info_text,
+            font=ctk.CTkFont(family="Consolas", size=12),
+            text_color="#BAC2DE",
+            justify="left",
+        )
+        sub_lbl.pack(anchor="w", padx=15, pady=(0, 10))
+
+    def _create_filter_bar(self) -> None:
+        bar = ctk.CTkFrame(self, fg_color="transparent")
+        bar.pack(fill="x", padx=15, pady=5)
+
+        lbl = ctk.CTkLabel(
+            bar,
+            text="Filter Level:",
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            text_color="#CDD6F4",
+        )
+        lbl.pack(side="left", padx=(0, 10))
+
+        self.btn_all = ctk.CTkButton(
+            bar,
+            text="All Logs",
+            width=80,
+            height=28,
+            fg_color="#1E66F5",
+            hover_color="#3B82F6",
+            command=lambda: self._set_filter("ALL"),
+        )
+        self.btn_all.pack(side="left", padx=3)
+
+        self.btn_err = ctk.CTkButton(
+            bar,
+            text="❌ Errors Only",
+            width=100,
+            height=28,
+            fg_color="#313244",
+            hover_color="#45475A",
+            command=lambda: self._set_filter("ERROR"),
+        )
+        self.btn_err.pack(side="left", padx=3)
+
+        self.btn_warn = ctk.CTkButton(
+            bar,
+            text="⚠️ Warnings",
+            width=90,
+            height=28,
+            fg_color="#313244",
+            hover_color="#45475A",
+            command=lambda: self._set_filter("WARNING"),
+        )
+        self.btn_warn.pack(side="left", padx=3)
+
+    def _create_log_view(self) -> None:
+        self.textbox = ctk.CTkTextbox(
+            self,
+            font=ctk.CTkFont(family="Consolas", size=12),
+            corner_radius=8,
+            fg_color="#11111B",
+            border_color="#313244",
+            border_width=1,
+            text_color="#CDD6F4",
+        )
+        self.textbox.pack(fill="both", expand=True, padx=15, pady=5)
+
+    def _create_footer_bar(self) -> None:
+        footer = ctk.CTkFrame(self, fg_color="transparent")
+        footer.pack(fill="x", padx=15, pady=(5, 15))
+
+        copy_btn = ctk.CTkButton(
+            footer,
+            text="📋 Copy Logs",
+            width=100,
+            height=30,
+            fg_color="#313244",
+            hover_color="#45475A",
+            command=self._copy_logs,
+        )
+        copy_btn.pack(side="left", padx=5)
+
+        folder_btn = ctk.CTkButton(
+            footer,
+            text="📁 Open Logs Folder",
+            width=140,
+            height=30,
+            fg_color="#313244",
+            hover_color="#45475A",
+            command=self._open_logs_folder,
+        )
+        folder_btn.pack(side="left", padx=5)
+
+        clear_btn = ctk.CTkButton(
+            footer,
+            text="🗑️ Clear Logs",
+            width=100,
+            height=30,
+            fg_color="#f38ba8",
+            hover_color="#e64553",
+            text_color="#11111B",
+            command=self._clear_logs_click,
+        )
+        clear_btn.pack(side="right", padx=5)
+
+        refresh_btn = ctk.CTkButton(
+            footer,
+            text="🔄 Refresh",
+            width=90,
+            height=30,
+            fg_color="#313244",
+            hover_color="#45475A",
+            command=self._refresh_logs,
+        )
+        refresh_btn.pack(side="right", padx=5)
+
+        self.status_lbl = ctk.CTkLabel(
+            footer,
+            text="",
+            font=ctk.CTkFont(family="Segoe UI", size=12),
+            text_color="#a6e3a1",
+        )
+        self.status_lbl.pack(side="right", padx=10)
+
+    def _set_filter(self, mode: str) -> None:
+        self._filter_mode = mode
+        self.btn_all.configure(fg_color="#1E66F5" if mode == "ALL" else "#313244")
+        self.btn_err.configure(fg_color="#1E66F5" if mode == "ERROR" else "#313244")
+        self.btn_warn.configure(fg_color="#1E66F5" if mode == "WARNING" else "#313244")
+        self._refresh_logs()
+
+    def _refresh_logs(self) -> None:
+        raw_text = read_logs()
+        self.textbox.configure(state="normal")
+        self.textbox.delete("1.0", "end")
+
+        if self._filter_mode == "ALL":
+            self.textbox.insert("1.0", raw_text)
+        else:
+            filtered_lines = []
+            for line in raw_text.splitlines():
+                if self._filter_mode == "ERROR" and (" [ERROR] " in line or " [CRITICAL] " in line or "Traceback" in line):
+                    filtered_lines.append(line)
+                elif self._filter_mode == "WARNING" and " [WARNING] " in line:
+                    filtered_lines.append(line)
+            display_text = "\n".join(filtered_lines) if filtered_lines else f"No logs matching filter level '{self._filter_mode}'."
+            self.textbox.insert("1.0", display_text)
+
+        self.textbox.see("end")
+        self.textbox.configure(state="disabled")
+
+    def _copy_logs(self) -> None:
+        content = self.textbox.get("1.0", "end").strip()
+        self.clipboard_clear()
+        self.clipboard_append(content)
+        self.status_lbl.configure(text="Copied to clipboard!")
+        self.after(3000, lambda: self.status_lbl.configure(text=""))
+
+    def _open_logs_folder(self) -> None:
+        LOGS_DIR.mkdir(parents=True, exist_ok=True)
+        if sys.platform == "win32":
+            os.startfile(str(LOGS_DIR))
+        elif sys.platform == "darwin":
+            import subprocess
+            subprocess.run(["open", str(LOGS_DIR)], check=False)
+        else:
+            import subprocess
+            subprocess.run(["xdg-open", str(LOGS_DIR)], check=False)
+
+    def _clear_logs_click(self) -> None:
+        clear_logs()
+        self._refresh_logs()
+        self.status_lbl.configure(text="Logs cleared!")
+        self.after(3000, lambda: self.status_lbl.configure(text=""))
 
 
 def main() -> int:

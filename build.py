@@ -51,6 +51,7 @@ def main() -> int:
         "--hidden-import", "yt_dlp",
         "--hidden-import", "rich",
         "--hidden-import", "PIL",
+        "--hidden-import", "src.logger",
         "--exclude-module", "playwright",
         "--clean",
         str(ROOT / "agent.py"),
@@ -63,9 +64,9 @@ def main() -> int:
         dist_dir = ROOT / "dist" / app_name
         if dist_dir.exists():
             print(f"[OK] Successfully created standalone folder bundle: {dist_dir}")
-            # Zip the directory for easy distribution
+            # Zip the directory with top-level folder inside the archive for easy extraction
             zip_target = ROOT / f"{app_name}-{sys.platform}"
-            shutil.make_archive(str(zip_target), "zip", dist_dir)
+            shutil.make_archive(str(zip_target), "zip", root_dir=ROOT / "dist", base_dir=app_name)
             print(f"[OK] Created distribution package: {zip_target}.zip")
     else:
         print("[FAIL] Build failed!")

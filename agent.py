@@ -37,9 +37,11 @@ from src.arming import (
     strip_arming_from_line,
 )
 from src.downloader import process_all, process_song
+from src.logger import setup_logging
 
 
 def main(argv: list[str] | None = None) -> int:
+    setup_logging()
     ui.ensure_utf8()
     if sys.platform == "win32":
         try:
